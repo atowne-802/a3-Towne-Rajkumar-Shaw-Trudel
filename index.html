@@ -2,8 +2,16 @@
 <div id="container"></div>
 <script type="module">
 
-import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
+    import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 
-console.log(d3);
+    console.log(d3);
+
+    import { bubbleGraph } from './graphs.js';
+    import { stackedBarGraph } from './graphs.js';
+    import { radarGraph } from './graphs.js';
+
+    //this is just a random size, but it is saying that smaller will be 50% the area of the larger
+    const chartNode = bubbleGraph(50, d3);
+    document.getElementById("container").appendChild(chartNode);
 
 </script>
