@@ -1,17 +1,70 @@
 <!DOCTYPE html>
 <div id="container"></div>
+<h2 id="q"></h2>
+<p id="err" style="color:red"></p>
+<div id="fig"></div>
+<input id="a" type="number">
+<button id="back">Back</button>
+<button id="next">Next</button>
 <script type="module">
 
     import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
-
     console.log(d3);
 
     import { bubbleGraph } from './graphs.js';
     import { stackedBarGraph } from './graphs.js';
     import { radarGraph } from './graphs.js';
 
-    //this is just a random size, but it is saying that smaller will be 50% the area of the larger
-    const chartNode = bubbleGraph(50, d3);
-    document.getElementById("container").appendChild(chartNode);
+
+    const graphs = [bubbleGraph, stackedBarGraph, radarGraph];
+
+    const trials = graphs.flatMap(graph =>
+        Array.from({length: 20}, () => ({
+            graph,
+            pct: Math.floor(Math.random() * 91) + 5,
+            answer: ""
+        }))
+    );
+
+    //shuffle questions/graph types
+    for (let k = trials.length - 1; k > 0; k--) {
+        const j = Math.floor(Math.random() * (k + 1));
+        [trials[k], trials[j]] = [trials[j], trials[k]];
+    }
+
+    //csv: get from assignment instructions
+    // save the correct answers, input answers, 
+    
+    const q = document.getElementById("q");
+    const fig = document.getElementById("fig");
+    const a = document.getElementById("a");
+    const err = document.getElementById("err");
+    let i = 0;
+
+    function show() {
+        const t = trials[i];
+        q.textContent = `Question ${i + 1} of ${trials.length}: What percent of the larger is the smaller?`;
+        fig.replaceChildren(t.graph(t.pct, d3));
+        a.value = t.answer;
+        err.textContent="";
+    }
+
+    document.getElementById("back").onclick = () => {
+        trials[i].answer = a.value;
+        if (i>0){i--; show();}
+    };
+
+    document.getElementById("next").onclick = () => {
+        if (a.value === "") { err.textContent = "Enter a number."; return; }
+        trials[i].answer = a.value;
+        if (i < trials.length - 1){ i++; show();}
+        else{
+            console.log(trials.map(t=> ({graph: t.graph.name, truth: t.pct, answer: +t.answer })));
+        }
+    };
+
+    show();
+
+    
 
 </script>
