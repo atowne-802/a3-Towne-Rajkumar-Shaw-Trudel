@@ -8,6 +8,13 @@
 <button id="next">Next</button>
 <script type="module">
 
+    // TO DO:
+    //have next change to finish when its quesiton 60
+    // end screen - thank you for participating
+    //styling
+    //master csv file
+    // unique participant ID
+
     import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
     console.log(d3);
 
@@ -15,11 +22,11 @@
     import { stackedBarGraph } from './graphs.js';
     import { radarGraph } from './graphs.js';
 
-
+    const participantId = 2;
     const graphs = [bubbleGraph, stackedBarGraph, radarGraph];
 
     const trials = graphs.flatMap(graph =>
-        Array.from({length: 20}, () => ({
+        Array.from({length: 2}, () => ({ //change back to 20; changed to 2 for testing
             graph,
             pct: Math.floor(Math.random() * 91) + 5,
             answer: ""
@@ -32,8 +39,6 @@
         [trials[k], trials[j]] = [trials[j], trials[k]];
     }
 
-    //csv: get from assignment instructions
-    // save the correct answers, input answers, 
     
     const q = document.getElementById("q");
     const fig = document.getElementById("fig");
@@ -41,14 +46,37 @@
     const err = document.getElementById("err");
     let i = 0;
 
+    // Show chart and question
     function show() {
         const t = trials[i];
         q.textContent = `Question ${i + 1} of ${trials.length}: What percent of the larger is the smaller?`;
         fig.replaceChildren(t.graph(t.pct, d3));
         a.value = t.answer;
         err.textContent="";
+        a.focus();
     }
 
+    // locally save csv file
+    function downloadCSV() {
+        const header = ["ParticipantID", "TrialNum", "Vis", "TruePercent", "ReportedPercent"];
+        const rows = trials.map((t, idx) => [
+            participantId,
+            idx + 1,
+            t.graph.name,
+            t.pct,
+            t.answer
+        ]);
+
+        const csv = [header, ...rows].map(r=> r.join(",")).join("\n");
+        const url = URL.createObjectURL(new Blob([csv], {type: "text/csv"}));
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `${participantId}.csv`;
+        link.click();
+        URL.revokeObjectURL(url);
+    }
+
+    //buttons
     document.getElementById("back").onclick = () => {
         trials[i].answer = a.value;
         if (i>0){i--; show();}
@@ -59,12 +87,14 @@
         trials[i].answer = a.value;
         if (i < trials.length - 1){ i++; show();}
         else{
-            console.log(trials.map(t=> ({graph: t.graph.name, truth: t.pct, answer: +t.answer })));
+            downloadCSV();
         }
     };
 
-    show();
+    a.addEventListener("keydown", e => {
+        if (e.key === "Enter") document.getElementById("next").click();
+    });
 
-    
+    show();
 
 </script>
