@@ -118,7 +118,122 @@ export function stackedBarGraph(val, d3) {
 }
 
 export function radarGraph(val, d3){
-  return makeRadarGraph(rando(), rando(), rando(), rando(), rando(), d3)
+    const randomValues = () => [
+        rando(),
+        rando(),
+        rando(),
+        rando(),
+        rando()
+    ];
+    const areaRatio = val / 100;
+    const originalXValues = randomValues();
+    const yValues = areaRatio === 0
+        ? [0, 0, 0, 0, 0]
+        : randomValues();
+
+    const polygonArea = values => {
+        const points = values.map((value, index) => {
+            const angle = (index * 2 * Math.PI) / values.length - Math.PI / 2;
+            return {
+                x: value * Math.cos(angle),
+                y: value * Math.sin(angle)
+            };
+        });
+
+        const twiceArea = points.reduce((sum, point, index) => {
+            const nextPoint = points[(index + 1) % points.length];
+            return sum + point.x * nextPoint.y - nextPoint.x * point.y;
+        }, 0);
+
+        return Math.abs(twiceArea) / 2;
+    };
+
+    let xScale = 1;
+    if (areaRatio > 0) {
+        const targetXArea = polygonArea(yValues) / areaRatio;
+        const currentXArea = polygonArea(originalXValues);
+        xScale = Math.sqrt(targetXArea / currentXArea);
+    }
+
+    const xValues = originalXValues.map(value => value * xScale);
+    const largestValue = Math.max(...xValues, ...yValues);
+    const fitScale = largestValue > 100 ? 100 / largestValue : 1;
+    const scaledXValues = xValues.map(value => value * fitScale);
+    const scaledYValues = yValues.map(value => value * fitScale);
+    const charts = [
+        { title: " ", values: randomValues() },
+        { title: " ", values: randomValues() },
+        { title: " ", values: randomValues() },
+        { title: ".", values: scaledXValues },
+        { title: ".", values: scaledYValues }
+    ];
+
+    for (let index = charts.length - 1; index > 0; index--) {
+        const randomIndex = Math.floor(Math.random() * (index + 1));
+        [charts[index], charts[randomIndex]] = [charts[randomIndex], charts[index]];
+    }
+
+    const chartSize = 300;
+    const columns = 3;
+    const rows = Math.ceil(charts.length / columns);
+    const width = columns * chartSize;
+    const height = rows * chartSize;
+    const svg = d3.create("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .attr("viewBox", `0 0 ${width} ${height}`);
+
+    const shapeCenter = values => {
+        const points = values.map((value, index) => {
+            const angle = (index * 2 * Math.PI) / values.length - Math.PI / 2;
+            return {
+                x: value * Math.cos(angle),
+                y: value * Math.sin(angle)
+            };
+        });
+
+        const sums = points.reduce((result, point, index) => {
+            const nextPoint = points[(index + 1) % points.length];
+            const cross = point.x * nextPoint.y - nextPoint.x * point.y;
+            result.area += cross;
+            result.x += (point.x + nextPoint.x) * cross;
+            result.y += (point.y + nextPoint.y) * cross;
+            return result;
+        }, { area: 0, x: 0, y: 0 });
+
+        return {
+            x: sums.x / (3 * sums.area),
+            y: sums.y / (3 * sums.area)
+        };
+    };
+
+    charts.forEach((chartData, index) => {
+        const column = index % columns;
+        const row = Math.floor(index / columns);
+        const chartSvg = makeRadarGraph(
+            chartData.values[0],
+            chartData.values[1],
+            chartData.values[2],
+            chartData.values[3],
+            chartData.values[4],
+            d3
+        );
+        const center = shapeCenter(chartData.values);
+        d3.select(chartSvg)
+            .select("g")
+            .append("text")
+            .attr("x", center.x)
+            .attr("y", center.y)
+            .attr("dominant-baseline", "middle")
+            .attr("font-size", 48)
+            .text(chartData.title);
+        
+        chartSvg.setAttribute("x", column * chartSize);
+        chartSvg.setAttribute("y", row * chartSize);
+        svg.node().append(chartSvg);
+    });
+
+    return svg.node();
 }
 
 function rando(){
