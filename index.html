@@ -1,19 +1,71 @@
 <!DOCTYPE html>
-<div id="container"></div>
-<h2 id="q"></h2>
-<p id="err" style="color:red"></p>
-<div id="fig"></div>
-<input id="a" type="number">
-<button id="back">Back</button>
-<button id="next">Next</button>
+
+<style>
+    body {
+        font-family: system-ui, sans-serif;
+        max-width: 600px;
+        margin: 40px auto;
+        padding: 0 16px;
+        text-align: center;
+    }
+
+    h1 {font-size: 2rem; margin-bottom: 24px;}
+    h2 {font-size: 1.3rem; font-weight: 600;}
+    p {line-height: 1.6;}
+
+    input {
+        font-size: 1.8rem;
+        width: 140px;
+        padding: 8px;
+        text-align: center;
+        border: 2px solid #999;
+        border-radius: 6px;
+        margin: 16px 0;
+    }
+    input:focus {
+        outline:none;
+        border-color: #2f5bea;
+    }
+
+    button {
+        font-size: 1.1rem;
+    padding: 10px 24px;
+    margin: 0 6px;
+    border: none;
+    border-radius: 6px;
+    background: #2f5bea;
+    color: white;
+    cursor: pointer;
+    }
+    button:hover { background: #2347c4; }
+</style>
+
+<div id="instructions">
+    <h1>Instructions</h1>
+    <p>This quiz contains 60 charts. In each chart, two items are marked with a dot.</p>
+    <p>Estimate what percent of the larger item the smaller item is, and type a number from 1 to 100.</p>
+    <p>Press 'Next' or hit the enter button to proceed to the next question. </p>
+    <p>Thank you for participating!</p>
+    <button id="start">Start</button>
+</div>
+
+<div id="end" hidden>
+    <h1>Quiz Complete</h1>
+</div>
+
+<div id="quiz" hidden>
+    <h2 id="q"></h2>
+    <p id="err" style="color:red"></p>
+    <div id="fig"></div>
+    <input id="a" type="number">
+    <button id="back">Back</button>
+    <button id="next">Next</button>
+    <progress id="bar" max="60" value="0" style="width:100%"></progress>
+</div>
 <script type="module">
 
     // TO DO:
-    //have next change to finish when its quesiton 60
-    // end screen - thank you for participating
-    //styling
     //master csv file
-    // unique participant ID
 
     import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
     console.log(d3);
@@ -22,11 +74,11 @@
     import { stackedBarGraph } from './graphs.js';
     import { radarGraph } from './graphs.js';
 
-    const participantId = 2;
+    const participantId = Date.now();
     const graphs = [bubbleGraph, stackedBarGraph, radarGraph];
 
     const trials = graphs.flatMap(graph =>
-        Array.from({length: 2}, () => ({ //change back to 20; changed to 2 for testing
+        Array.from({length: 20}, () => ({ 
             graph,
             pct: Math.floor(Math.random() * 91) + 5,
             answer: ""
@@ -53,7 +105,9 @@
         fig.replaceChildren(t.graph(t.pct, d3));
         a.value = t.answer;
         err.textContent="";
+        document.getElementById("next").textContent = i === trials.length - 1 ? "Finish" : "Next";
         a.focus();
+        document.getElementById("bar").value = i + 1;
     }
 
     // locally save csv file
@@ -77,6 +131,12 @@
     }
 
     //buttons
+    document.getElementById("start").onclick = () => {
+        document.getElementById("instructions").hidden = true;
+        document.getElementById("quiz").hidden = false;
+        show();
+    };
+
     document.getElementById("back").onclick = () => {
         trials[i].answer = a.value;
         if (i>0){i--; show();}
@@ -88,6 +148,8 @@
         if (i < trials.length - 1){ i++; show();}
         else{
             downloadCSV();
+            document.getElementById("quiz").hidden = true;
+            document.getElementById("end").hidden=false;
         }
     };
 
@@ -95,6 +157,5 @@
         if (e.key === "Enter") document.getElementById("next").click();
     });
 
-    show();
 
 </script>
