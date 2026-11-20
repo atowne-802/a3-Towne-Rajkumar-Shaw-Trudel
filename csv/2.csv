@@ -1,0 +1,7 @@
+ParticipantID,TrialNum,Vis,TruePercent,ReportedPercent
+2,1,bubbleGraph,19,5
+2,2,radarGraph,17,3
+2,3,bubbleGraph,10,5
+2,4,stackedBarGraph,45,2
+2,5,stackedBarGraph,9,3
+2,6,radarGraph,34,4
