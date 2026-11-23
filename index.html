@@ -51,6 +51,7 @@
 
 <div id="end" hidden>
     <h1>Quiz Complete</h1>
+    <p id="grade"></p>
 </div>
 
 <div id="quiz" hidden>
@@ -148,6 +149,9 @@
         if (i < trials.length - 1){ i++; show();}
         else{
             downloadCSV();
+            const avgError = trials.reduce(
+                (sum, t) => sum + Math.abs(Number(t.answer) - t.pct), 0)/trials.length;
+            document.getElementById("summary").textContent = `On average, you guessed within ${Math.round(avgError)} percentage points of the actual answer.`;
             document.getElementById("quiz").hidden = true;
             document.getElementById("end").hidden=false;
         }
